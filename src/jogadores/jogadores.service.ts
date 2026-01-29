@@ -1,0 +1,129 @@
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { UpdateJogadorDto } from "./dtos/update-jogador.dto";
+import { CreateJogadorTypes } from "./interfaces/create-jogador.type";
+import { IJogador } from "./interfaces/jogador.interface";
+import { IJogadorV2 } from "./interfaces/jogador-v2.interface";
+import { JogadorEntity } from "./jogador.entity";
+
+@Injectable()
+export class JogadoresService {
+  constructor(
+    @Inject("JOGADOR_REPOSITORY")
+    private jogadorRepository: typeof JogadorEntity
+  ) {}
+
+  async findAll(): Promise<IJogador[]> {
+    try {
+      const jogadores = await this.jogadorRepository.findAll();
+      if (!jogadores || jogadores.length === 0) {
+        throw new NotFoundException(`Not found "jogadores"`);
+      }
+      return jogadores;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async findOne(id: number): Promise<IJogador> {
+    try {
+      const jogador = await this.jogadorRepository.findByPk(id);
+      if (!jogador) {
+        throw new NotFoundException(`Not found "jogador" with id ${id}`);
+      }
+      return jogador;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async create(jogadorDto: CreateJogadorTypes): Promise<IJogador> {
+    try {
+      return await this.jogadorRepository.create(jogadorDto);
+    } catch (error: any) {
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async update(
+    id: number,
+    updateJogadorDto: UpdateJogadorDto
+  ): Promise<IJogador> {
+    try {
+      const [affectedCount, [updatedJogador]] =
+        await this.jogadorRepository.update(updateJogadorDto, {
+          where: { id },
+          returning: true,
+        });
+      if (affectedCount === 0) {
+        throw new NotFoundException(`Not found "jogador" with id ${id}`);
+      }
+      return updatedJogador;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async remove(id: number): Promise<object> {
+    try {
+      const deletedCount = await this.jogadorRepository.destroy({
+        where: { id },
+      });
+      if (deletedCount === 0) {
+        throw new NotFoundException(`Not found "jogador" with id ${id}`);
+      }
+      return {
+        message: `Successfully removed "jogador" with id ${id}`,
+        success: true,
+        statusCode: 200,
+      };
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  private toJogadorDtoV2(jogador: IJogador): IJogadorV2 {
+    return {
+      id: jogador.id,
+      nome: jogador.nome,
+      telefone: jogador.telefone,
+      email: jogador.email,
+      createdAt: jogador.createdAt,
+      updatedAt: jogador.updatedAt,
+    };
+  }
+
+  async findAllV2(): Promise<IJogadorV2[]> {
+    try {
+      const jogadores = await this.jogadorRepository.findAll();
+      if (!jogadores || jogadores.length === 0) {
+        throw new NotFoundException(`Not found "jogadores"`);
+      }
+      return jogadores.map((jogador) => this.toJogadorDtoV2(jogador));
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async findOneV2(id: number): Promise<IJogadorV2> {
+    try {
+      const jogador = await this.jogadorRepository.findByPk(id);
+      if (!jogador) {
+        throw new NotFoundException(`Not found "jogador" with id ${id}`);
+      }
+      return this.toJogadorDtoV2(jogador);
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+}
