@@ -9,6 +9,7 @@ import { CreateJogadorTypes } from "./interfaces/create-jogador.type";
 import { IJogador } from "./interfaces/jogador.interface";
 import { IJogadorV2 } from "./interfaces/jogador-v2.interface";
 import { JogadorEntity } from "./jogador.entity";
+import { PaginationDto } from "../common/pagination/pagination.dto";
 
 @Injectable()
 export class JogadoresService {
@@ -30,6 +31,36 @@ export class JogadoresService {
     }
   }
 
+  async findAllV2(): Promise<IJogadorV2[]> {
+    try {
+      const jogadores = await this.jogadorRepository.findAll();
+      if (!jogadores || jogadores.length === 0) {
+        throw new NotFoundException(`Not found "jogadores"`);
+      }
+      return jogadores.map((jogador) => this.toJogadorDtoV2(jogador));
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async findAllV3(paginationDto?: PaginationDto): Promise<IJogador[]> {
+    try {
+      const jogadores = await this.jogadorRepository.findAll({
+        limit: paginationDto?.limit || 10,
+        offset: paginationDto?.offset || 0,
+        order: [["createdAt", paginationDto?.order || "ASC"]],
+      });
+      if (!jogadores || jogadores.length === 0) {
+        throw new NotFoundException(`Not found "jogadores"`);
+      }
+      return jogadores;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
   async findOne(id: number): Promise<IJogador> {
     try {
       const jogador = await this.jogadorRepository.findByPk(id);
@@ -37,6 +68,19 @@ export class JogadoresService {
         throw new NotFoundException(`Not found "jogador" with id ${id}`);
       }
       return jogador;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException((error as Error).message);
+    }
+  }
+
+  async findOneV2(id: number): Promise<IJogadorV2> {
+    try {
+      const jogador = await this.jogadorRepository.findByPk(id);
+      if (!jogador) {
+        throw new NotFoundException(`Not found "jogador" with id ${id}`);
+      }
+      return this.toJogadorDtoV2(jogador);
     } catch (error: any) {
       if (error instanceof NotFoundException) throw error;
       throw new BadRequestException((error as Error).message);
@@ -99,31 +143,5 @@ export class JogadoresService {
       createdAt: jogador.createdAt,
       updatedAt: jogador.updatedAt,
     };
-  }
-
-  async findAllV2(): Promise<IJogadorV2[]> {
-    try {
-      const jogadores = await this.jogadorRepository.findAll();
-      if (!jogadores || jogadores.length === 0) {
-        throw new NotFoundException(`Not found "jogadores"`);
-      }
-      return jogadores.map((jogador) => this.toJogadorDtoV2(jogador));
-    } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
-    }
-  }
-
-  async findOneV2(id: number): Promise<IJogadorV2> {
-    try {
-      const jogador = await this.jogadorRepository.findByPk(id);
-      if (!jogador) {
-        throw new NotFoundException(`Not found "jogador" with id ${id}`);
-      }
-      return this.toJogadorDtoV2(jogador);
-    } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
-    }
   }
 }

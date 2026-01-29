@@ -16,6 +16,8 @@ import { IJogador } from "./interfaces/jogador.interface";
 import { JogadoresService } from "./jogadores.service";
 import { UpdateJogadorDto } from "./dtos/update-jogador.dto";
 import { IJogadorV2 } from "./interfaces/jogador-v2.interface";
+import { Query } from "@nestjs/common";
+import { PaginationDto } from "../common/pagination/pagination.dto";
 
 @Controller("jogadores")
 export class JogadoresController {
@@ -30,6 +32,12 @@ export class JogadoresController {
   @Get() // v2
   findAllV2(): Promise<IJogadorV2[]> {
     return this.jogadoresService.findAllV2();
+  }
+
+  @Version("3")
+  @Get() // v3
+  findAllV3(@Query() paginationDto: PaginationDto): Promise<IJogador[]> {
+    return this.jogadoresService.findAllV3(paginationDto);
   }
 
   @Get(":id") // v1
