@@ -1,6 +1,7 @@
 import { Dialect } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
-import { JogadorEntity } from "../jogadores/jogador.entity";
+import { JogadorEntity } from "../jogadores/entities/jogador.entity";
+import { UserEntity } from "../user/entities/user.entity";
 
 export const databaseProviders = [
   {
@@ -15,7 +16,7 @@ export const databaseProviders = [
         database: process.env.DB_NAME,
         logging: false,
       });
-      sequelize.addModels([JogadorEntity]);
+      sequelize.addModels([JogadorEntity, UserEntity]);
       await sequelize.sync();
       return sequelize;
     },

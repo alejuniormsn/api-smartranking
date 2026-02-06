@@ -1,14 +1,15 @@
 import {
   BadRequestException,
+  HttpStatus,
   Inject,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
 import { UpdateJogadorDto } from "./dtos/update-jogador.dto";
-import { CreateJogadorTypes } from "./interfaces/create-jogador.type";
+import { CreateJogadorTypes } from "./dtos/create-jogador.type";
 import { IJogador } from "./interfaces/jogador.interface";
 import { IJogadorV2 } from "./interfaces/jogador-v2.interface";
-import { JogadorEntity } from "./jogador.entity";
+import { JogadorEntity } from "./entities/jogador.entity";
 import { PaginationDto } from "../common/pagination/pagination.dto";
 
 @Injectable()
@@ -126,7 +127,7 @@ export class JogadoresService {
       return {
         message: `Successfully removed "jogador" with id ${id}`,
         success: true,
-        statusCode: 200,
+        statusCode: HttpStatus.OK,
       };
     } catch (error: any) {
       if (error instanceof NotFoundException) throw error;
