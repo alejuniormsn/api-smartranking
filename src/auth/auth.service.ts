@@ -23,7 +23,7 @@ export class AuthService {
 
   async authenticate(signInDto: SignInDto) {
     const authUser = await this.userRepository.findOne({
-      where: { email: signInDto.email },
+      where: { email: signInDto.email, active: true },
     });
     if (!authUser) {
       throw new UnauthorizedException(`Invalid authentication`);

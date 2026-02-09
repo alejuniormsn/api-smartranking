@@ -6,6 +6,7 @@ import {
   Table,
   Unique,
   AllowNull,
+  Default,
 } from "sequelize-typescript";
 import { Role } from "../enums/role.enum";
 
@@ -37,4 +38,9 @@ export class UserEntity extends Model {
   @AllowNull(false)
   @Column("VARCHAR(15)")
   declare role: Role;
+
+  @AllowNull(false)
+  @Default(true)
+  @Column
+  declare active: boolean;
 }
