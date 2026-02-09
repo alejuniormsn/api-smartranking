@@ -17,17 +17,22 @@ import { UpdateUserDto } from "./dtos/update-user.dto";
 import { PaginationDto } from "src/common/pagination/pagination.dto";
 import { AuthTokenGuard } from "src/auth/guard/auth-token.guard";
 import { UseGuards } from "@nestjs/common";
+import { CustomParamToken } from "src/auth/decorator/custom-rapam-token";
+import { PayloadTokenDto } from "src/auth/dto/payload-token.dto";
 
+@UseGuards(AuthTokenGuard)
 @Controller("users")
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<IUser> {
-    return this.userService.create(createUserDto);
+  async create(
+    @Body() createUserDto: CreateUserDto,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<IUser> {
+    return this.userService.create(createUserDto, tokenPayload);
   }
 
-  @UseGuards(AuthTokenGuard)
   @Get()
   async findAll(): Promise<IUser[]> {
     return this.userService.findAll();
@@ -40,20 +45,26 @@ export class UserController {
   }
 
   @Get(":id")
-  async findOne(@Param("id", ParseIntPipe) id: number): Promise<IUser> {
-    return this.userService.findOne(id);
+  async findOne(
+    @Param("id", ParseIntPipe) id: number,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<IUser> {
+    return this.userService.findOne(id, tokenPayload);
   }
-
   @Put(":id")
   async update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
+    @Body() updateUserDto: UpdateUserDto,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
   ): Promise<IUser> {
-    return this.userService.update(id, updateUserDto);
+    return this.userService.update(id, updateUserDto, tokenPayload);
   }
 
   @Delete(":id")
-  async remove(@Param("id", ParseIntPipe) id: number): Promise<object> {
-    return this.userService.remove(id);
+  async remove(
+    @Param("id", ParseIntPipe) id: number,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<object> {
+    return this.userService.remove(id, tokenPayload);
   }
 }

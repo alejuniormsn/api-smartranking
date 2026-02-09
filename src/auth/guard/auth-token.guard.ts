@@ -10,6 +10,7 @@ import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
 import jwtConfig from "../config/jwt.config";
 import * as config from "@nestjs/config";
+import { JwtPayload } from "../interfaces/jwtPayload";
 
 @Injectable()
 export class AuthTokenGuard implements CanActivate {
@@ -34,10 +35,13 @@ export class AuthTokenGuard implements CanActivate {
         throw new UnauthorizedException("No token provided");
       }
 
-      await this.jwtService.verifyAsync(token, this.jwtConfiguration);
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+        secret: this.jwtConfiguration.secret,
+      });
+      request["user"] = { id: payload.sub, role: payload.role };
       return true;
     } catch (error: any) {
-      throw new BadRequestException(`${(error as Error).message} - TokenError`);
+      throw new BadRequestException(`Token error: ${(error as Error).message}`);
     }
   }
 }

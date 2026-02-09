@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { PaginationDto } from "src/common/pagination/pagination.dto";
 import { BadRequestException } from "@nestjs/common";
@@ -11,6 +12,8 @@ import { IUser } from "./interfaces/user.interface";
 import { UpdateUserDto } from "./dtos/update-user.dto";
 import { HashingService } from "src/auth/hash/hashing.service";
 import { CreateUserDto } from "./dtos/create-user.dto";
+import { PayloadTokenDto } from "src/auth/dto/payload-token.dto";
+import { CustomParamToken } from "src/auth/decorator/custom-rapam-token";
 
 @Injectable()
 export class UserService {
@@ -41,7 +44,7 @@ export class UserService {
         limit: paginationDto?.limit || 10,
         offset: paginationDto?.offset || 0,
         order: [["createdAt", paginationDto?.order || "ASC"]],
-        attributes: { exclude: ["password"] },
+        attributes: { exclude: ["password", "role"] },
       });
       if (!users || users.length === 0) {
         throw new NotFoundException(`Not found "users"`);
@@ -53,13 +56,21 @@ export class UserService {
     }
   }
 
-  async findOne(id: number): Promise<IUser> {
+  async findOne(
+    id: number,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<IUser> {
     try {
       const user = await this.userRepository.findByPk(id, {
         attributes: { exclude: ["password"] },
       });
       if (!user) {
         throw new NotFoundException(`Not found "user" with id ${id}`);
+      }
+      if (tokenPayload.id !== id) {
+        throw new UnauthorizedException(
+          "Permission denied. You can only access your data!"
+        );
       }
       return user;
     } catch (error: any) {
@@ -68,7 +79,15 @@ export class UserService {
     }
   }
 
-  async create(userDto: CreateUserDto): Promise<IUser> {
+  async create(
+    userDto: CreateUserDto,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<IUser> {
+    if (tokenPayload.role !== "admin") {
+      throw new UnauthorizedException(
+        "Permission denied. You can only create users as admin!"
+      );
+    }
     try {
       const hashedPassword = this.hashingService.hash(userDto.password);
       const userWithoutPassword = await this.userRepository.create({
@@ -85,7 +104,21 @@ export class UserService {
     }
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<IUser> {
+  async update(
+    id: number,
+    updateUserDto: UpdateUserDto,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<IUser> {
+    if (tokenPayload.role !== "admin") {
+      throw new UnauthorizedException(
+        "Permission denied. You can only update users as admin!"
+      );
+    }
+    if (tokenPayload.id !== id) {
+      throw new UnauthorizedException(
+        "Access denied. You can only update your user!"
+      );
+    }
     try {
       let hashedPassword = updateUserDto.password;
       if (updateUserDto.password) {
@@ -115,7 +148,20 @@ export class UserService {
     }
   }
 
-  async remove(id: number): Promise<object> {
+  async remove(
+    id: number,
+    @CustomParamToken() tokenPayload: PayloadTokenDto
+  ): Promise<object> {
+    if (tokenPayload.role !== "admin") {
+      throw new UnauthorizedException(
+        "Permission denied. You can only delete users as admin!"
+      );
+    }
+    if (tokenPayload.id === id) {
+      throw new UnauthorizedException(
+        "Access denied. You cannot delete your user!"
+      );
+    }
     try {
       const deletedCount = await this.userRepository.destroy({
         where: { id },

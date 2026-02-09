@@ -7,6 +7,7 @@ import {
   Unique,
   AllowNull,
 } from "sequelize-typescript";
+import { Role } from "../enums/role.enum";
 
 @Table({ tableName: "users" })
 export class UserEntity extends Model {
@@ -32,4 +33,8 @@ export class UserEntity extends Model {
   @AllowNull(false)
   @Column("VARCHAR(100)")
   declare password: string;
+
+  @AllowNull(false)
+  @Column("VARCHAR(15)")
+  declare role: Role;
 }

@@ -1,9 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { HashingService } from "./hash/hashing.service";
 import { UserEntity } from "src/user/entities/user.entity";
 import { SignInDto } from "./dto/signIn.dto";
@@ -16,10 +11,13 @@ import { JwtService } from "@nestjs/jwt";
 export class AuthService {
   constructor(
     private readonly hashingService: HashingService,
+
     @Inject("USER_REPOSITORY")
     private userRepository: typeof UserEntity,
+
     @Inject(jwtConfig.KEY)
     private readonly jwtConfiguration: config.ConfigType<typeof jwtConfig>,
+
     private readonly jwtService: JwtService
   ) {}
 
@@ -28,10 +26,9 @@ export class AuthService {
       where: { email: signInDto.email },
     });
     if (!authUser) {
-      throw new NotFoundException(
-        `Not found "user" with email: ${signInDto.email}`
-      );
+      throw new UnauthorizedException(`Invalid authentication`);
     }
+
     const isPasswordValid = this.hashingService.compare(
       signInDto.password,
       authUser.password
@@ -39,14 +36,17 @@ export class AuthService {
     if (!isPasswordValid) {
       throw new UnauthorizedException(`Invalid authentication`);
     }
+
     const user: IUser = {
       ...authUser.toJSON(),
       password: undefined,
     };
+
     const token = await this.jwtService.signAsync(
       {
         sub: authUser.id,
         email: authUser.email,
+        role: authUser.role,
       },
       {
         secret: this.jwtConfiguration.secret,
