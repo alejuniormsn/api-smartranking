@@ -43,7 +43,7 @@ export class UserService {
         limit: paginationDto?.limit || 10,
         offset: paginationDto?.offset || 0,
         order: [["createdAt", paginationDto?.order || "ASC"]],
-        attributes: { exclude: ["password", "role"] },
+        attributes: { exclude: ["password", "role", "active"] },
       });
       if (!users || users.length === 0) {
         throw new NotFoundException(`Not found "users"`);
@@ -65,7 +65,7 @@ export class UserService {
       if (!user) {
         throw new NotFoundException(`Not found "user" with id ${id}`);
       }
-      if (tokenPayload.id !== id) {
+      if (tokenPayload.sub !== id) {
         throw new UnauthorizedException(
           "Permission denied. You can only access your data!"
         );
@@ -111,7 +111,7 @@ export class UserService {
         "Permission denied. You can only update users as admin!"
       );
     }
-    if (tokenPayload.id !== id) {
+    if (tokenPayload.sub !== id) {
       throw new UnauthorizedException(
         "Access denied. You can only update your user!"
       );
@@ -153,7 +153,7 @@ export class UserService {
         "Permission denied. You can only delete users as admin!"
       );
     }
-    if (tokenPayload.id === id) {
+    if (tokenPayload.sub === id) {
       throw new UnauthorizedException(
         "Access denied. You cannot delete your user!"
       );

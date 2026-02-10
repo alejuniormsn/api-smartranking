@@ -39,11 +39,6 @@ export class AuthService {
         throw new UnauthorizedException(`Invalid authentication`);
       }
 
-      const user: IUser = {
-        ...authUser.toJSON(),
-        password: undefined,
-      };
-
       const token = await this.jwtService.signAsync(
         {
           sub: authUser.id,
@@ -57,6 +52,12 @@ export class AuthService {
           issuer: this.jwtConfiguration.issuer,
         }
       );
+
+      const user: IUser = {
+        ...authUser.toJSON(),
+        password: undefined,
+      };
+
       return { user, token };
     } catch (error: any) {
       throw handleDatabaseError(error);

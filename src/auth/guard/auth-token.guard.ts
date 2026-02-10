@@ -48,7 +48,7 @@ export class AuthTokenGuard implements CanActivate {
         throw new Error("User not found");
       }
 
-      request["user"] = { id: payload.sub, role: payload.role };
+      request["user"] = { sub: payload.sub, role: payload.role };
       return true;
     } catch (error: any) {
       throw new BadRequestException(`Token error: ${(error as Error).message}`);

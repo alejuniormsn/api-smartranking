@@ -1,4 +1,4 @@
 export class PayloadTokenDto {
-  id: number;
+  sub: number;
   role: string;
 }
