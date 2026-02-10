@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   HttpStatus,
   Inject,
   Injectable,
@@ -11,6 +10,7 @@ import { IJogador } from "./interfaces/jogador.interface";
 import { IJogadorV2 } from "./interfaces/jogador-v2.interface";
 import { JogadorEntity } from "./entities/jogador.entity";
 import { PaginationDto } from "../common/pagination/pagination.dto";
+import { handleDatabaseError } from "src/common/error/handleDatabaseError";
 
 @Injectable()
 export class JogadoresService {
@@ -27,8 +27,7 @@ export class JogadoresService {
       }
       return jogadores;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -40,8 +39,7 @@ export class JogadoresService {
       }
       return jogadores.map((jogador) => this.toJogadorDtoV2(jogador));
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -57,8 +55,7 @@ export class JogadoresService {
       }
       return jogadores;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -70,8 +67,7 @@ export class JogadoresService {
       }
       return jogador;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -83,8 +79,7 @@ export class JogadoresService {
       }
       return this.toJogadorDtoV2(jogador);
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -92,7 +87,7 @@ export class JogadoresService {
     try {
       return await this.jogadorRepository.create(jogadorDto);
     } catch (error: any) {
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -111,8 +106,7 @@ export class JogadoresService {
       }
       return updatedJogador;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -126,12 +120,10 @@ export class JogadoresService {
       }
       return {
         message: `Successfully removed "jogador" with id ${id}`,
-        success: true,
-        statusCode: HttpStatus.OK,
+        status: HttpStatus.OK,
       };
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 

@@ -45,7 +45,7 @@ export class AuthTokenGuard implements CanActivate {
 
       const user = await this.userRepository.findByPk(payload.sub);
       if (!user || user.active === false) {
-        throw new UnauthorizedException("User not found");
+        throw new Error("User not found");
       }
 
       request["user"] = { id: payload.sub, role: payload.role };

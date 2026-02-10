@@ -6,6 +6,7 @@ import { IUser } from "src/user/interfaces/user.interface";
 import jwtConfig from "./config/jwt.config";
 import * as config from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { handleDatabaseError } from "src/common/error/handleDatabaseError";
 
 @Injectable()
 export class AuthService {
@@ -22,39 +23,43 @@ export class AuthService {
   ) {}
 
   async authenticate(signInDto: SignInDto) {
-    const authUser = await this.userRepository.findOne({
-      where: { email: signInDto.email, active: true },
-    });
-    if (!authUser) {
-      throw new UnauthorizedException(`Invalid authentication`);
-    }
-
-    const isPasswordValid = this.hashingService.compare(
-      signInDto.password,
-      authUser.password
-    );
-    if (!isPasswordValid) {
-      throw new UnauthorizedException(`Invalid authentication`);
-    }
-
-    const user: IUser = {
-      ...authUser.toJSON(),
-      password: undefined,
-    };
-
-    const token = await this.jwtService.signAsync(
-      {
-        sub: authUser.id,
-        email: authUser.email,
-        role: authUser.role,
-      },
-      {
-        secret: this.jwtConfiguration.secret,
-        expiresIn: this.jwtConfiguration.jwtTtl,
-        audience: this.jwtConfiguration.audience,
-        issuer: this.jwtConfiguration.issuer,
+    try {
+      const authUser = await this.userRepository.findOne({
+        where: { email: signInDto.email, active: true },
+      });
+      if (!authUser) {
+        throw new UnauthorizedException(`Invalid authentication`);
       }
-    );
-    return { user, token };
+
+      const isPasswordValid = this.hashingService.compare(
+        signInDto.password,
+        authUser.password
+      );
+      if (!isPasswordValid) {
+        throw new UnauthorizedException(`Invalid authentication`);
+      }
+
+      const user: IUser = {
+        ...authUser.toJSON(),
+        password: undefined,
+      };
+
+      const token = await this.jwtService.signAsync(
+        {
+          sub: authUser.id,
+          email: authUser.email,
+          role: authUser.role,
+        },
+        {
+          secret: this.jwtConfiguration.secret,
+          expiresIn: this.jwtConfiguration.jwtTtl,
+          audience: this.jwtConfiguration.audience,
+          issuer: this.jwtConfiguration.issuer,
+        }
+      );
+      return { user, token };
+    } catch (error: any) {
+      throw handleDatabaseError(error);
+    }
   }
 }

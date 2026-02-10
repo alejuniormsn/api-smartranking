@@ -6,7 +6,6 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { PaginationDto } from "src/common/pagination/pagination.dto";
-import { BadRequestException } from "@nestjs/common";
 import { UserEntity } from "./entities/user.entity";
 import { IUser } from "./interfaces/user.interface";
 import { UpdateUserDto } from "./dtos/update-user.dto";
@@ -14,6 +13,7 @@ import { HashingService } from "src/auth/hash/hashing.service";
 import { CreateUserDto } from "./dtos/create-user.dto";
 import { PayloadTokenDto } from "src/auth/dto/payload-token.dto";
 import { CustomParamToken } from "src/auth/decorator/custom-rapam-token";
+import { handleDatabaseError } from "src/common/error/handleDatabaseError";
 
 @Injectable()
 export class UserService {
@@ -33,8 +33,7 @@ export class UserService {
       }
       return users;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -51,8 +50,7 @@ export class UserService {
       }
       return users;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -74,8 +72,7 @@ export class UserService {
       }
       return user;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -100,7 +97,7 @@ export class UserService {
       };
       return user;
     } catch (error: any) {
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -143,8 +140,7 @@ export class UserService {
       };
       return user;
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 
@@ -175,8 +171,7 @@ export class UserService {
         statusCode: HttpStatus.OK,
       };
     } catch (error: any) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException((error as Error).message);
+      throw handleDatabaseError(error);
     }
   }
 }
